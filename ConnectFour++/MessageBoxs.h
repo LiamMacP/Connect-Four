@@ -3,7 +3,7 @@
 #include <sstream>
 #include "Board.h"
 
-class MessageBoxes
+class MessageBoxs
 {
 public:
 	static bool PlayAgainstAI(HWND hwnd);

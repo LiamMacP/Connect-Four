@@ -1,6 +1,6 @@
 #include "MessageBoxes.h"
 
-bool MessageBoxes::PlayAgainstAI(HWND hwnd)
+bool MessageBoxs::PlayAgainstAI(HWND hwnd)
 {
 	int msgboxID = MessageBox(
 		hwnd,
@@ -14,7 +14,7 @@ bool MessageBoxes::PlayAgainstAI(HWND hwnd)
 		return false;
 }
 
-void MessageBoxes::ShowWinningPlayer(HWND hwnd, const Colours PlayerCurrently)
+void MessageBoxs::ShowWinningPlayer(HWND hwnd, const Colours PlayerCurrently)
 {
 	std::wstringstream strm;
 	if (PlayerCurrently == REDColour)
@@ -24,7 +24,7 @@ void MessageBoxes::ShowWinningPlayer(HWND hwnd, const Colours PlayerCurrently)
 	MessageBox(hwnd, strm.str().c_str(), NULL, NULL);
 }
 
-void MessageBoxes::ShowMessage(HWND hwnd, std::wstringstream stream)
+void MessageBoxs::ShowMessage(HWND hwnd, std::wstringstream stream)
 {
 	MessageBox(hwnd, stream.str().c_str(), NULL, NULL);
 }

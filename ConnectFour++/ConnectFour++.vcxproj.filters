@@ -27,7 +27,7 @@
     <ClInclude Include="Enums.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MessageBoxes.h">
+    <ClInclude Include="MessageBoxs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -44,7 +44,7 @@
     <ClCompile Include="Player.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MessageBoxes.cpp">
+    <ClCompile Include="MessageBoxs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
