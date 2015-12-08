@@ -4,6 +4,7 @@
 #include <string>
 #include "Board.h"
 #include "AIPlayer.h"
+#include "MessageBoxes.h"
 
 using namespace std;
 
@@ -98,7 +99,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CREATE:
 		::hwnd = hWnd;
-		playingAI = aiPlayer.IsPlayingAi(hwnd);
+		playingAI = MessageBoxes::PlayAgainstAI(hwnd);
 		return 0;
 		break;
 	case WM_SIZE:
@@ -205,20 +206,6 @@ void DrawCurrentPoints(HDC hdc)
 	}
 }
 
-void TryAI()
-{
-	player1.SetPlayerColour(YELLOWColour);
-	aiPlayer.SetPlayerColour(REDColour);
-	board.CurrentBoard[5][2] = RED;
-	board.CurrentBoard[5][3] = YELLOW;
-	board.CurrentBoard[5][4] = YELLOW;
-	board.CurrentBoard[5][5] = YELLOW;
-	board.NextFree[5] = 1;
-	board.NextFree[4] = 1;
-	board.NextFree[3] = 1;
-	board.NextFree[2] = 1;
-	//board.PlayTurn(aiPlayer.PlayAI(board.CurrentBoard, board.NextFree));
-}
 
 void OnDraw(HWND hwnd)
 {
@@ -255,64 +242,21 @@ void OnMouseMove(UINT nFlags, int cx, int cy)
 
 void OnLButtonDown(UINT nFlags, int cx, int cy)
 {
-	//TryAI();
 	int index = (cx - 30) / 45;
 	if (board.PlayTurn(index))
-		board.DisplayWinner(hwnd, board.ReturnCurrentPlayer());
+		MessageBoxes::ShowWinningPlayer(hwnd, board.ReturnCurrentPlayer());
 	else
 	{
 		if (playingAI)
 		{
 			if (board.PlayTurn(aiPlayer.PlayAI(board.CurrentBoard, board.NextFree, board.ReturnNumberOfTurns())))
-				board.DisplayWinner(hwnd, board.ReturnCurrentPlayer());
+				MessageBoxes::ShowWinningPlayer(hwnd, board.ReturnCurrentPlayer());
 		}
 	}
 	OnDraw(hwnd);
 	}
 
 
-
-
-		/*	if (PlayerCurrently == AiColour && playingAgainstAI)
-		{
-			void PlayAIMove();
-			PlayAIMove();
-		}*/
-//int CheckAIMove(BoardState CurrentBoard[6][7]);
-//void PlayAIMove()
-//{
-//	BoardState tempBoard[6][7] = {};
-//	void CopyBoard(const BoardState CurrentBoard[6][7], BoardState(&TempBoard)[6][7]);
-//	CopyBoard(BoardInputs, tempBoard);
-//	int column = CheckAIMove(tempBoard);
-//
-//	if (column == -1)
-//	{
-//		column = rand() % 7;
-//		while (!(BoardInputs[5 - nextFree[column]][column] == BLANKSPACE))
-//		{
-//			column = rand() % 7;
-//		}
-//	}
-//
-//	if (column >= 0 && column < 7 && BoardInputs[5 - nextFree[column]][column] == BLANKSPACE)
-//	{
-//		nextFree[column]++;
-//		if (AiColour == PlayerRed)
-//		{
-//			BoardInputs[6 - nextFree[column]][column] = RED;
-//			CheckForWinner();
-//			PlayerCurrently = PlayerYellow;
-//		}
-//		else
-//		{
-//			BoardInputs[6 - nextFree[column]][column] = YELLOW;
-//			CheckForWinner();
-//			PlayerCurrently = PlayerRed;
-//		}
-//	}
-//}
-//
 
 
 

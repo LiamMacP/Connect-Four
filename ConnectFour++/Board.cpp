@@ -1,15 +1,10 @@
 #include <stdlib.h>
-#include <sstream>
 #include <ctime>
 #include "Board.h"
 
 Board::Board()
 {
 	Board::RefreshBoard();
-}
-
-Board::~Board()
-{
 }
 
 bool Board::PlayTurn(const int index)
@@ -226,15 +221,5 @@ void Board::ChangePlayer()
 		PlayerCurrently = YELLOWColour;
 	else
 		PlayerCurrently = REDColour;
-}
-
-void Board::DisplayWinner(HWND hwnd, const Colours PlayerCurrently)
-{
-	std::wstringstream strm;
-	if (PlayerCurrently == REDColour)
-		strm << "The winner of this game is: Player Red.";
-	else
-		strm << "The winner of this game is: Player Yellow.";
-	MessageBox(hwnd, strm.str().c_str(), NULL, NULL);
 }
 

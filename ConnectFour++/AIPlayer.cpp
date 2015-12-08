@@ -224,16 +224,3 @@ int AIPlayer::Block2Moves(BoardState MainBoard[6][7], int nextCopy[7], int numbe
 	return -1;
 }
 
-bool AIPlayer::IsPlayingAi(HWND hwnd)
-{
-	int msgboxID = MessageBox(
-		hwnd,
-		L"Are you wanting to play against the AI?",
-		L"Play AI!",
-		MB_YESNO | MB_DEFBUTTON1
-		);
-	if (msgboxID == IDYES)
-		return true;
-	else
-		return false;
-}

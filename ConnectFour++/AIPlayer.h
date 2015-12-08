@@ -11,7 +11,6 @@ class AIPlayer : public Player
 	int nextColumnToPlay;
 
 public:
-	bool IsPlayingAi(HWND hwnd);
 	int PlayAI(BoardState MainBoard[6][7], int nextCopy[7], int numberOfTurns);
 	void ChangeDifficulty(AIDifficulty NewDifficulty) { Difficulty = NewDifficulty; }
 

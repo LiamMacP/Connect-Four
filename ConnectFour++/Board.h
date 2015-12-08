@@ -32,7 +32,6 @@ public:
 	int ReturnNumberOfTurns() { return CurrentTurns; }
 
 	Board();
-	~Board();
 private:
 	bool CheckForDiagonal(const BoardState CurrentPosition, const int i, const  int j,const  int checkAmount);
 	bool CheckUpDown(const BoardState CurrentPosition, const int i, const  int j, const int checkAmount);
