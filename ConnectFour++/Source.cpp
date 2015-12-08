@@ -4,7 +4,7 @@
 #include <string>
 #include "Board.h"
 #include "AIPlayer.h"
-#include "MessageBoxes.h"
+#include "MessageBoxs.h"
 
 using namespace std;
 
@@ -99,7 +99,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CREATE:
 		::hwnd = hWnd;
-		playingAI = MessageBoxes::PlayAgainstAI(hwnd);
+		playingAI = MessageBoxs::PlayAgainstAI(hwnd);
 		return 0;
 		break;
 	case WM_SIZE:
@@ -244,13 +244,13 @@ void OnLButtonDown(UINT nFlags, int cx, int cy)
 {
 	int index = (cx - 30) / 45;
 	if (board.PlayTurn(index))
-		MessageBoxes::ShowWinningPlayer(hwnd, board.ReturnCurrentPlayer());
+		MessageBoxs::ShowWinningPlayer(hwnd, board.ReturnCurrentPlayer());
 	else
 	{
 		if (playingAI)
 		{
 			if (board.PlayTurn(aiPlayer.PlayAI(board.CurrentBoard, board.NextFree, board.ReturnNumberOfTurns())))
-				MessageBoxes::ShowWinningPlayer(hwnd, board.ReturnCurrentPlayer());
+				MessageBoxs::ShowWinningPlayer(hwnd, board.ReturnCurrentPlayer());
 		}
 	}
 	OnDraw(hwnd);
