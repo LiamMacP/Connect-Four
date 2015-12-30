@@ -25,12 +25,11 @@ public:
 	void AddToColumn(const int ColumnID, Colours PlayerToAdd);
 	void CopyBoard(BoardState copy[6][7], int nextCopy[7], int numberOfTurns);
 	void RefreshBoard();
-	void DisplayWinner(HWND hwnd, const Colours PlayerCurrently);
 	int GetNextFreeNumber(const int ColumnID) { return NextFree[ColumnID]; }
 	BoardState ReturnSelectedValue(const int i, const int j) { return CurrentBoard[i][j]; }
 	Colours ReturnCurrentPlayer() { return PlayerCurrently; }
 	int ReturnNumberOfTurns() { return CurrentTurns; }
-
+	int ReturnNextFree(const int index) { return NextFree[index]; }
 	Board();
 private:
 	bool CheckForDiagonal(const BoardState CurrentPosition, const int i, const  int j,const  int checkAmount);

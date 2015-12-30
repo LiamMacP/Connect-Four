@@ -72,6 +72,7 @@ void Board::RefreshBoard()
 	GameFinished = false;
 	NoWinner = false;
 	CurrentTurns = 0;
+	RandomiseStartingPlayer();
 }
 
 bool Board::CheckForWinner(int checkAmount)
@@ -208,7 +209,7 @@ bool Board::CheckSide(const BoardState CurrentPosition, const int i, const  int 
 
 void Board::RandomiseStartingPlayer()
 {
-	srand(static_cast<unsigned int>(time(0)));
+	srand(static_cast<unsigned int>(time(NULL)));
 	if (rand() % 2)
 		PlayerCurrently = REDColour;
 	else

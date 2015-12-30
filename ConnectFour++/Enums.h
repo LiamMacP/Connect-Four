@@ -18,3 +18,9 @@ enum AIDifficulty : int {
 	Moderate = 3,
 	Hard = 4
 };
+
+enum GameState {
+	Playing, 
+	NewGameQuery, 
+	AiQuery
+};
