@@ -22,5 +22,5 @@ enum AIDifficulty : int {
 enum GameState {
 	Playing, 
 	NewGameQuery, 
-	AiQuery
+	GameOver
 };

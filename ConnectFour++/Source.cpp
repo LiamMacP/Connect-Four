@@ -5,32 +5,27 @@
 #include <string>
 #include "Board.h"
 #include "AIPlayer.h"
-#include "MessageBoxs.h"
+#include "Constants.h"
+#include "Prototypes.h"
 
 using namespace std;
 
 HWND hwnd;
 bool showmsg;
-HBITMAP ysprite, mask, sprite, background, backbuffer, backgroundMask;
 HDC hdctmp, hdcback;
+HBITMAP ysprite, mask, sprite, background, backbuffer, backgroundMask;
 
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-void OnTimer();
-void OnDraw(HWND hwnd);
-void OnSize(UINT nShowCmd, int cx, int cy);
-void OnKeyDown(UINT nChar, UINT nRpt, UINT nFlags);
-void OnMouseMove(UINT nFlags, int cx, int cy);
-void OnLButtonDown(UINT nFlags, int cx, int cy);
-void CreateGUI(HINSTANCE hInstance);
-
-void DrawBoardAndCounter(HDC hdc);
-void ShowWinnerDialog(Colours CurrentPlayer);
-
-int posx, posy, widthOfBoard, counterSize(40), counterSizeOffset(36), oldSize(0), currentIndex(0);
+int posx(0), posy(0), widthOfBoard(75), counterSize(40), counterSizeOffset(36), oldSize(0), currentIndex(0);
 bool playingAI(true);
+
+GameState gState = NewGameQuery;
 Board board;
 Player player1, player2;
 AIPlayer aiPlayer;
+
+bool timerOn;
+DWORD tCount; int pixelsToTravel, countertop;
+double timeToTake;
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -41,6 +36,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	showmsg = false;
 	CreateGUI(hInstance);
 	return 0;
+
 }
 
 void CreateGUI(HINSTANCE hInstance)
@@ -61,18 +57,15 @@ void CreateGUI(HINSTANCE hInstance)
 	RegisterClassEx(&classname);
 
 	int width = 450;
-	int height = 400;
+	int height = 504;
 	int offx = (::GetSystemMetrics(SM_CXSCREEN) - width) / 2;
 	int offy = (::GetSystemMetrics(SM_CYSCREEN) - height) / 2;
 
-	posx = 0;
-	posy = 0;
-
-	mask = (HBITMAP) ::LoadImage(hInstance, L"RedCircleMsk.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
-	sprite = (HBITMAP) ::LoadImage(hInstance, L"RedCircleSpt.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
-	ysprite = (HBITMAP) ::LoadImage(hInstance, L"YellowCircleSpt.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
-	background = (HBITMAP) ::LoadImage(hInstance, L"ConnectFourBoardSpt.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
-	backgroundMask = (HBITMAP) ::LoadImage(hInstance, L"ConnectFourBoardMsk.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
+	mask = (HBITMAP) ::LoadImage(hInstance, L"MskCounter.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
+	sprite = (HBITMAP) ::LoadImage(hInstance, L"SpriteRedCounter.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
+	ysprite = (HBITMAP) ::LoadImage(hInstance, L"SpriteYellowCounter.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
+	background = (HBITMAP) ::LoadImage(hInstance, L"SpriteBoard.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
+	backgroundMask = (HBITMAP) ::LoadImage(hInstance, L"MskBoard.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
 
 	HDC hdcsrc = ::GetDC(NULL);
 	hdctmp = ::CreateCompatibleDC(hdcsrc);
@@ -80,7 +73,6 @@ void CreateGUI(HINSTANCE hInstance)
 	backbuffer = NULL;
 	::SelectObject(hdctmp, background);
 	::ReleaseDC(NULL, hdcsrc);
-
 
 	CreateWindowEx(NULL, L"Connect 4++", L"Connect 4++", WS_OVERLAPPEDWINDOW | WS_VISIBLE, offx, offy, width, height, NULL, NULL, hInstance, NULL);
 
@@ -101,7 +93,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CREATE:
 		::hwnd = hWnd;
-		playingAI = MessageBoxs::PlayAgainstAI(hwnd);
 		return 0;
 		break;
 	case WM_SIZE:
@@ -116,7 +107,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	break;
 	case WM_TIMER:
-		OnTimer();
+		OnTimer(wParam);
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
@@ -136,6 +127,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }
+
 
 void OnSize(UINT nShowCmd, int cx, int cy)
 {
@@ -161,32 +153,133 @@ void OnSize(UINT nShowCmd, int cx, int cy)
 		backbuffer = ::CreateDIBSection(hdcback, &bmpinfo, DIB_RGB_COLORS, NULL, NULL, 0);
 		::SelectObject(hdcback, backbuffer);
 
+		::SetStretchBltMode(hdcback, HALFTONE);
+		::SetBrushOrgEx(hdcback, 0, 0, NULL);
+
 	}
 
 }
+
+void OnMouseMove(UINT nFlags, int cx, int cy)
+{
+	if (!(timerOn))
+	{
+		RECT rect;
+		::GetClientRect(hwnd, &rect);
+		int index = (cx - ((rect.right - widthOfBoard) / 2)) / counterSize;
+		if (index >= 0 && index < 7)
+		{
+			posx = (rect.right - widthOfBoard) / 2 + index * counterSize + (counterSize *0.1);
+			posy = (rect.bottom - widthOfBoard) / 2 - 10;
+			currentIndex = index;
+		}
+		OnDraw(hwnd);
+	}
+}
+
+void OnLButtonDown(UINT nFlags, int cx, int cy)
+{
+	RECT rect;
+	::GetClientRect(hwnd, &rect);
+	if (gState == NewGameQuery)
+	{
+		if (cx >= (rect.right >> 1) * 0.7 && cx <= (rect.right >> 1) * 1.3)
+		{
+			if (cy >= (rect.bottom >> 1) * 0.9 && cy <= (rect.bottom >> 1) * 1.1)
+			{
+				gState = Playing;
+				playingAI = false;
+			} if (cy >= (rect.bottom >> 1) * 1.2 && cy <= (rect.bottom >> 1) * 1.4)
+			{
+				gState = Playing;
+				playingAI = true;
+			}
+		}
+	}
+	else if (gState == Playing)
+	{
+
+		if (!(timerOn))
+		{
+			if (cx >= (rect.left + 14) && cx <= (rect.left + 100) && cy >= (rect.top + 20) && cy <= rect.top + 50)
+			{
+				gState = Playing;
+				playingAI = false;
+				board.RefreshBoard();
+			}
+			else {
+				int index = (cx - ((rect.right - widthOfBoard) / 2)) / counterSize;
+				if (board.CheckInputValidity(index))
+				{
+					StartAnimation(index, rect, HUMAN_PLAYER);
+				}
+			}
+		}
+	}
+	else if (gState == GameOver)
+	{
+		if (cx >= (rect.right >> 1) * 0.7 && cx <= (rect.right >> 1) * 1.3)
+		{
+			if (cy >= (rect.bottom >> 1) *1.2 && cy <= (rect.bottom >> 1) * 1.4)
+			{
+				board.RefreshBoard();
+				gState = Playing;
+				playingAI = false;
+			} if (cy >= (rect.bottom >> 1) * 1.5 && cy <= (rect.bottom >> 1) * 1.7)
+			{
+				board.RefreshBoard();
+				gState = Playing;
+				playingAI = true;
+			}
+		}
+	}
+	OnDraw(hwnd);
+}
+
+void OnDraw(HWND hwnd)
+{
+	RECT rect;
+	::GetClientRect(hwnd, &rect);
+	::FillRect(hdcback, &rect, (HBRUSH) ::GetStockObject(WHITE_BRUSH));
+	if (gState == NewGameQuery)
+	{
+		DrawNewGameInfo(hdcback, rect);
+	}
+	else if (gState == Playing)
+	{
+		DrawBoardInfo(hdcback, rect);
+	}
+	else if (gState == GameOver)
+	{
+		DrawGameOverInfo(hdcback, rect);
+	}
+
+	HDC hdc = GetDC(hwnd);
+	::BitBlt(hdc, 0, 0, rect.right, rect.bottom, hdcback, 0, 0, SRCCOPY);
+	::ReleaseDC(hwnd, hdc);
+}
+
 
 void DrawBoardAndCounter(HDC hdc, RECT rect)
 {
 	if (board.ReturnCurrentPlayer() == REDColour)
 	{
-
 		::SelectObject(hdctmp, mask);
-		::StretchBlt(hdc, posx, posy, counterSize, counterSize, hdctmp, 0, 0, 34, 34, SRCAND);
+		::StretchBlt(hdc, posx, posy, counterSizeOffset, counterSizeOffset, hdctmp, 0, 0, 150, 150, SRCAND);
 		::SelectObject(hdctmp, sprite);
-		::StretchBlt(hdc, posx, posy, counterSize, counterSize, hdctmp, 0, 0, 34, 34, SRCINVERT);
+		::StretchBlt(hdc, posx, posy, counterSizeOffset, counterSizeOffset, hdctmp, 0, 0, 150, 150, SRCINVERT);
 	}
 	else
 	{
 		::SelectObject(hdctmp, mask);
-		::StretchBlt(hdc, posx, posy, counterSize, counterSize, hdctmp, 0, 0, 34, 34, SRCAND);
+		::StretchBlt(hdc, posx, posy, counterSizeOffset, counterSizeOffset, hdctmp, 0, 0, 150, 150, SRCAND);
 		::SelectObject(hdctmp, ysprite);
-		::StretchBlt(hdc, posx, posy, counterSize, counterSize, hdctmp, 0, 0, 34, 34, SRCINVERT);
+		::StretchBlt(hdc, posx, posy, counterSizeOffset, counterSizeOffset, hdctmp, 0, 0, 150, 150, SRCINVERT);
 	}
 	::SelectObject(hdctmp, backgroundMask);
-	::StretchBlt(hdc, (rect.right - widthOfBoard) / 2, (rect.bottom - widthOfBoard) / 2 + counterSize, widthOfBoard, widthOfBoard, hdctmp, 0, 0, 280, 280, SRCAND);
+	::StretchBlt(hdc, (rect.right - widthOfBoard) / 2, (rect.bottom - widthOfBoard) / 2 + counterSize, widthOfBoard, widthOfBoard, hdctmp, 0, 0, 1050, 1050, SRCAND);
 	::SelectObject(hdctmp, background);
-	::StretchBlt(hdc, (rect.right - widthOfBoard) / 2, (rect.bottom - widthOfBoard) / 2 + counterSize, widthOfBoard, widthOfBoard, hdctmp, 0, 0, 280, 280, SRCINVERT);
-
+	::StretchBlt(hdc, (rect.right - widthOfBoard) / 2, (rect.bottom - widthOfBoard) / 2 + counterSize, widthOfBoard, widthOfBoard, hdctmp, 0, 0, 1050, 1050, SRCINVERT);
 }
 
 void DrawCurrentPoints(HDC hdc, RECT rect)
@@ -195,126 +288,199 @@ void DrawCurrentPoints(HDC hdc, RECT rect)
 	{
 		for (int j = 0; j < 7; j++)
 		{
+			int xStart = ((double)rect.right - widthOfBoard) / 2 + j * counterSize + (counterSize * 0.05 + (double)j / 100);
+			if (j > 3)
+			{
+				xStart = ((double)rect.right - widthOfBoard) / 2 + j * counterSize + (counterSize * (double)(j + 3) / 100);
+			}
+
 			if (board.ReturnSelectedValue(i, j) == RED)
 			{
 				::SelectObject(hdctmp, mask);
-				::StretchBlt(hdc, (rect.right - widthOfBoard) / 2 + j * counterSize, rect.bottom - ((rect.bottom - widthOfBoard) / 2) - (6 - i) * counterSize, counterSize, counterSize, hdctmp, 0, 0, 34, 34, SRCAND);
+				::StretchBlt(hdc, xStart, rect.bottom - ((rect.bottom - widthOfBoard) / 2) - (6 - i) * counterSize + (counterSize * 0.05), counterSizeOffset, counterSizeOffset, hdctmp, 0, 0, 150, 150, SRCAND);
 				::SelectObject(hdctmp, sprite);
-				::StretchBlt(hdc, (rect.right - widthOfBoard) / 2 + j * counterSize, rect.bottom - ((rect.bottom - widthOfBoard) / 2) - (6 - i) * counterSize, counterSize, counterSize, hdctmp, 0, 0, 34, 34, SRCINVERT);
+				::StretchBlt(hdc, xStart, rect.bottom - ((rect.bottom - widthOfBoard) / 2) - (6 - i) * counterSize + (counterSize * 0.05), counterSizeOffset, counterSizeOffset, hdctmp, 0, 0, 150, 150, SRCINVERT);
 			}
 			else if (board.ReturnSelectedValue(i, j) == YELLOW)
 			{
 				::SelectObject(hdctmp, mask);
-				::StretchBlt(hdc, (rect.right - widthOfBoard) / 2 + j * counterSize, rect.bottom - ((rect.bottom - widthOfBoard) / 2) - (6 - i) * counterSize, counterSize, counterSize, hdctmp, 0, 0, 34, 34, SRCAND);
+				::StretchBlt(hdc, xStart, rect.bottom - ((rect.bottom - widthOfBoard) / 2) - (6 - i) * counterSize + (counterSize * 0.05), counterSizeOffset, counterSizeOffset, hdctmp, 0, 0, 150, 150, SRCAND);
 				::SelectObject(hdctmp, ysprite);
-				::StretchBlt(hdc, (rect.right - widthOfBoard) / 2 + j * counterSize, rect.bottom - ((rect.bottom - widthOfBoard) / 2) - (6 - i) * counterSize, counterSize, counterSize, hdctmp, 0, 0, 34, 34, SRCINVERT);
+				::StretchBlt(hdc, xStart, rect.bottom - ((rect.bottom - widthOfBoard) / 2) - (6 - i) * counterSize + (counterSize * 0.05), counterSizeOffset, counterSizeOffset, hdctmp, 0, 0, 150, 150, SRCINVERT);
 
 			}
 		}
 	}
 }
-	bool timerOn;
 
-	void OnDraw(HWND hwnd)
+void DrawNewGameInfo(HDC hdc, RECT rect)
+{
+
+	int	widthOfBoard = (rect.right - 30);
+
+	HBRUSH brush = CreateSolidBrush(RGB(210, 210, 210));
+	HPEN pen = CreatePen(PS_SOLID, 1, RGB(150, 150, 150));
+
+	HGDIOBJ old_brush = SelectObject(hdc, brush);
+	HGDIOBJ old_pen = SelectObject(hdc, pen);
+
+	RoundRect(hdc, rect.left + 30, rect.top + 30, rect.right - 30, rect.bottom - 30, 10, 10);
+
+
+	HBITMAP bWelcome = (HBITMAP)::LoadImage(NULL, L"WelcomeScreen.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
+	::SelectObject(hdctmp, bWelcome);
+	::StretchBlt(hdc, rect.left + 40, rect.top + 40, rect.right - 80, rect.bottom *0.3, hdctmp, 0, 0, 900, 200, SRCCOPY);
+
+	SetBkColor(hdc, RGB(210, 210, 210));
+
+	Rectangle(hdc, (rect.right >> 1) * 0.7, (rect.bottom >> 1) * 0.9, (rect.right >> 1) * 1.3, (rect.bottom >> 1) * 1.1);
+	DrawText(hdc, L"Play User.", -1, new RECT{ (rect.right >> 1) * 0.7, (rect.bottom >> 1) * 0.9, (rect.right >> 1) * 1.3, (rect.bottom >> 1) * 1.1 },
+		DT_SINGLELINE | DT_VCENTER | DT_NOCLIP | DT_CENTER);
+
+	Rectangle(hdc, (rect.right >> 1) * 0.7, (rect.bottom >> 1) * 1.2, (rect.right >> 1) * 1.3, (rect.bottom >> 1) * 1.4);
+	DrawText(hdc, L"Play AI.", -1, new RECT{ (rect.right >> 1) * 0.7, (rect.bottom >> 1) * 1.2, (rect.right >> 1) * 1.3, (rect.bottom >> 1) * 1.4 },
+		DT_SINGLELINE | DT_VCENTER | DT_NOCLIP | DT_CENTER);
+
+	DeleteObject(brush);
+	DeleteObject(pen);
+
+}
+
+void DrawBoardInfo(HDC hdc, RECT rect)
+{
+	if (rect.right < rect.bottom)
+		widthOfBoard = (rect.right - 70);
+	else
+		widthOfBoard = (rect.bottom - 70);
+	counterSizeOffset = (widthOfBoard / 7) * 0.9;
+	counterSize = (widthOfBoard / 7);
+	//For when the application firsts starts, makes the starting counter appear at the start.
+	if (posx == 0 || rect.right != oldSize)
 	{
+		oldSize = rect.right;
+		posx = ((((rect.right - widthOfBoard) / 2) + currentIndex * counterSize) + (counterSizeOffset *0.05));
+	}
+	//	
+
+	void DrawCurrentPoints(HDC hdc, RECT rect);
+	DrawCurrentPoints(hdcback, rect);
+
+	void DrawBoardAndCounter(HDC hdc, RECT rect);
+	DrawBoardAndCounter(hdcback, rect);
+
+	void DrawNewGameBox(HDC hdc, RECT rect);
+	DrawNewGameBox(hdcback, rect);
+}
+
+void DrawGameOverInfo(HDC hdc, RECT rect)
+{
+	int	widthOfBoard = (rect.right - 30);
+
+	HBRUSH brush = CreateSolidBrush(RGB(210, 210, 210));
+	HPEN pen = CreatePen(PS_SOLID, 1, RGB(150, 150, 150));
+
+	HGDIOBJ old_brush = SelectObject(hdc, brush);
+	HGDIOBJ old_pen = SelectObject(hdc, pen);
+
+	RoundRect(hdc, rect.left + 30, rect.top + 30, rect.right - 30, rect.bottom - 30, 10, 10);
+
+
+	HBITMAP bWelcome = (HBITMAP)::LoadImage(NULL, L"GameOver.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
+	::SelectObject(hdctmp, bWelcome);
+	::StretchBlt(hdc, rect.left + 40, rect.top + 40, rect.right - 80, rect.bottom *0.3, hdctmp, 0, 0, 900, 200, SRCCOPY);
+
+	SetBkColor(hdc, RGB(210, 210, 210));
+
+	std::wstring strm;
+	if (board.ReturnWinningPlayer() == REDColour)
+		strm = L"The winner of this game is: Player Red.";
+	else
+		strm = L"The winner of this game is: Player Yellow.";
+	DrawText(hdc, strm.c_str(), -1, new RECT{ (rect.right >> 1) * 0.7, (rect.bottom >> 1) * 0.9, (rect.right >> 1) * 1.3, (rect.bottom >> 1) * 1.1 },
+		DT_SINGLELINE | DT_VCENTER | DT_NOCLIP | DT_CENTER);
+
+
+	Rectangle(hdc, (rect.right >> 1) * 0.7, (rect.bottom >> 1) * 1.2, (rect.right >> 1) * 1.3, (rect.bottom >> 1) * 1.4);
+	DrawText(hdc, L"Play User.", -1, new RECT{ (rect.right >> 1) * 0.7, (rect.bottom >> 1) * 1.2, (rect.right >> 1) * 1.3, (rect.bottom >> 1) * 1.4 },
+		DT_SINGLELINE | DT_VCENTER | DT_NOCLIP | DT_CENTER);
+
+	Rectangle(hdc, (rect.right >> 1) * 0.7, (rect.bottom >> 1) * 1.5, (rect.right >> 1) * 1.3, (rect.bottom >> 1) * 1.7);
+	DrawText(hdc, L"Play AI.", -1, new RECT{ (rect.right >> 1) * 0.7, (rect.bottom >> 1) * 1.5, (rect.right >> 1) * 1.3, (rect.bottom >> 1) * 1.7 },
+		DT_SINGLELINE | DT_VCENTER | DT_NOCLIP | DT_CENTER);
+
+	DeleteObject(brush);
+	DeleteObject(pen);
+
+}
+
+void DrawNewGameBox(HDC hdc, RECT rect)
+{
+
+	HBRUSH brush = CreateSolidBrush(RGB(210, 210, 210));
+	HPEN pen = CreatePen(PS_SOLID, 1, RGB(150, 150, 150));
+	//Select it
+	HGDIOBJ old_brush = SelectObject(hdc, brush);
+	HGDIOBJ old_pen = SelectObject(hdc, pen);
+
+	SetBkColor(hdc, RGB(210, 210, 210));
+
+	Rectangle(hdc, rect.left + 14, (rect.top + 20), (rect.left + 100), rect.top + 50);
+	DrawText(hdc, L"New Game", -1, new RECT{ rect.left + 14, (rect.top + 20), (rect.left + 100), rect.top + 50 },
+		DT_SINGLELINE | DT_VCENTER | DT_NOCLIP | DT_CENTER);
+
+}
+
+
+void StartAnimation(const int index, RECT rect, int player)
+{
+	tCount = GetTickCount();
+	countertop = posy;
+	pixelsToTravel = (rect.bottom - ((rect.bottom - widthOfBoard) / 2) - (1 + board.ReturnNextFree(index)) * counterSize) - posy;
+	SetTimer(hwnd, player, 50, NULL); //Interval is framerate (approx).
+	timerOn = true;
+
+}
+
+void OnTimer(UINT nIDEvent)
+{
+	const int pixelsPerSecond = 1; //Speed of drop.
+	DWORD newCount = GetTickCount();
+
+	DWORD diff = newCount - tCount;
+	float t = diff / 200.0f;
+	posy = (int)(countertop - (40 * t) + (20 * t*t));
+
+	if (posy > countertop + pixelsToTravel)
+	{
+		posy = countertop + pixelsToTravel;
+		KillTimer(hwnd, nIDEvent);
+		timerOn = false;
 
 		RECT rect;
 		::GetClientRect(hwnd, &rect);
-		::FillRect(hdcback, &rect, (HBRUSH) ::GetStockObject(WHITE_BRUSH));
-		if (rect.right < rect.bottom)
-			widthOfBoard = (rect.right - 60);
-		else
-			widthOfBoard = (rect.bottom - 60);
-		counterSizeOffset = (widthOfBoard / 7) * 0.9;
-		counterSize = (widthOfBoard / 7);
-		//For when the application firsts starts, makes the starting counter appear at the start.
-		if (posx == 0 || rect.right != oldSize)
-		{
-			oldSize = rect.right;
-			posx = ((((rect.right - widthOfBoard) / 2) + currentIndex * counterSize) + (counterSizeOffset *0.05));
-		}
-		if (!(timerOn))
-		{
-			void DrawCurrentPoints(HDC hdc, RECT rect);
-			DrawCurrentPoints(hdcback, rect);
-		}
-		void DrawBoardAndCounter(HDC hdc, RECT rect);
-		DrawBoardAndCounter(hdcback, rect);
 
-		HDC hdc = GetDC(hwnd);
-		::BitBlt(hdc, 0, 0, rect.right, rect.bottom, hdcback, 0, 0, SRCCOPY);
-		::ReleaseDC(hwnd, hdc);
-	}
-
-
-
-	void OnMouseMove(UINT nFlags, int cx, int cy)
-	{
-		if (!(timerOn))
-		{
-			RECT rect;
-			::GetClientRect(hwnd, &rect);
-			int index = (cx - ((rect.right - widthOfBoard) / 2)) / counterSize;
-			if (index >= 0 && index < 7)
-			{
-				posx = (rect.right - widthOfBoard) / 2 + index * counterSize;
-				posy = (rect.bottom - widthOfBoard) / 2 - 10;
-				currentIndex = index;
-			}
-			OnDraw(hwnd);
-		}
-	}
-
-	void OnLButtonDown(UINT nFlags, int cx, int cy)
-	{
-		RECT rect;
-		::GetClientRect(hwnd, &rect);
-		int index = (cx - ((rect.right - widthOfBoard) / 2)) / counterSize;
-		if (board.CheckInputValidity(index))
-		{
-			void StartAnimcation(const int index, RECT rect);
-			StartAnimcation(index, rect);
-		}
+		int index = (posx - ((rect.right - widthOfBoard) / 2)) / counterSize;
+		posy = countertop;
 		if (board.PlayTurn(index))
-			MessageBoxs::ShowWinningPlayer(hwnd, board.ReturnCurrentPlayer());
+		{
+			gState = GameOver;
+		}
 		else
 		{
-			if (playingAI)
+			if (playingAI && nIDEvent == HUMAN_PLAYER)
 			{
+				int aiTurn = aiPlayer.PlayAI(board.CurrentBoard, board.NextFree, board.ReturnNumberOfTurns());
 
-				if (board.PlayTurn(aiPlayer.PlayAI(board.CurrentBoard, board.NextFree, board.ReturnNumberOfTurns())))
-					MessageBoxs::ShowWinningPlayer(hwnd, board.ReturnCurrentPlayer());
+				posx = (rect.right - widthOfBoard) / 2 + aiTurn * counterSize + (counterSize * 0.1);
+				posy = (rect.bottom - widthOfBoard) / 2 - 10;
+
+				StartAnimation(index, rect, AI_PLAYER);
+
 			}
 		}
-		OnDraw(hwnd);
 	}
-	DWORD tCount; int pixelsToTravel;
-	double timeToTake;
-
-	void StartAnimcation(const int index, RECT rect)
-	{
-		const int pixelsPerSecond = 72;
-		const int interval = 1000 / pixelsPerSecond;
-		tCount = GetTickCount();
-		pixelsToTravel = (rect.bottom - ((rect.bottom - widthOfBoard) / 2) - (0 + board.ReturnNextFree(index)) * counterSize) - posy;
-		timeToTake = (pixelsToTravel / (double)pixelsPerSecond);
-		SetTimer(hwnd, 1, interval, NULL); //Doesn't tick correct when pixels per second is 100, otherwise the counter would be correct and the default position move -300px.
-		timerOn = true;
-
-	}
-
-	void OnTimer()
-	{
-		DWORD newCount = GetTickCount();
-		posy += 1;
-		if (newCount - tCount >= (timeToTake * 1000))
-		{
-			KillTimer(hwnd, 1);
-			timerOn = false;
-		}
-		OnDraw(hwnd);
-
-	}
+	OnDraw(hwnd);
+}
 
 
 

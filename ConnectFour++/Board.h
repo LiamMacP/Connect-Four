@@ -11,6 +11,7 @@ class Board
 	bool NoWinner;
 	int CurrentTurns;
 	Colours PlayerCurrently;
+	Colours WinningPlayer; 
 
 public:
 	BoardState CurrentBoard[6][7];
@@ -30,6 +31,7 @@ public:
 	Colours ReturnCurrentPlayer() { return PlayerCurrently; }
 	int ReturnNumberOfTurns() { return CurrentTurns; }
 	int ReturnNextFree(const int index) { return NextFree[index]; }
+	Colours ReturnWinningPlayer() { return WinningPlayer; }
 	Board();
 private:
 	bool CheckForDiagonal(const BoardState CurrentPosition, const int i, const  int j,const  int checkAmount);

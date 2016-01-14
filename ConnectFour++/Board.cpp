@@ -14,6 +14,7 @@ bool Board::PlayTurn(const int index)
 		AddToColumn(index);
 		if (CheckForWinner())
 		{
+			WinningPlayer = PlayerCurrently;
 			return true;
 		}
 		else

@@ -20,7 +20,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -81,16 +81,19 @@
   <ItemGroup>
     <ClInclude Include="AIPlayer.h" />
     <ClInclude Include="Board.h" />
+    <ClInclude Include="Constants.h" />
     <ClInclude Include="Enums.h" />
-    <ClInclude Include="MessageBoxs.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="Prototypes.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AIPlayer.cpp" />
     <ClCompile Include="Board.cpp" />
-    <ClCompile Include="MessageBoxs.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Source.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ChangeLog.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
