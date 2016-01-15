@@ -12,6 +12,12 @@ enum Colours : char
 	YELLOWColour = 'Y'
 };
 
+enum FinishedGame
+{
+	Winner,
+	NoWinner
+};
+
 enum AIDifficulty : int {
 	Easiest = 1,
 	Easy = 2,

@@ -8,7 +8,8 @@
 class Board
 {
 	bool GameFinished;
-	bool NoWinner;
+	FinishedGame WinnerOrNot;
+	bool NotOver;
 	int CurrentTurns;
 	Colours PlayerCurrently;
 	Colours WinningPlayer; 
@@ -32,6 +33,7 @@ public:
 	int ReturnNumberOfTurns() { return CurrentTurns; }
 	int ReturnNextFree(const int index) { return NextFree[index]; }
 	Colours ReturnWinningPlayer() { return WinningPlayer; }
+	FinishedGame ReturnWonOrNot() { return WinnerOrNot; }
 	Board();
 private:
 	bool CheckForDiagonal(const BoardState CurrentPosition, const int i, const  int j,const  int checkAmount);

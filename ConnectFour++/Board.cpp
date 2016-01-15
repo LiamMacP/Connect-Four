@@ -15,10 +15,16 @@ bool Board::PlayTurn(const int index)
 		if (CheckForWinner())
 		{
 			WinningPlayer = PlayerCurrently;
+			WinnerOrNot = Winner;
 			return true;
 		}
 		else
 		{
+			if (NotOver)
+			{
+				WinnerOrNot = NoWinner;
+				return true;
+			}
 			ChangePlayer();
 		}
 	}
@@ -71,7 +77,7 @@ void Board::RefreshBoard()
 		NextFree[i] = 0;
 	}
 	GameFinished = false;
-	NoWinner = false;
+	NotOver = false;
 	CurrentTurns = 0;
 	RandomiseStartingPlayer();
 }
@@ -83,7 +89,7 @@ bool Board::CheckForWinner(int checkAmount)
 	{
 		for (int j = 6; j >= 0; j--)
 		{
-			if (!(GameFinished) && !(NoWinner))
+			if (!(GameFinished) && !(NotOver))
 			{
 				bool currentFoundDiag(false), currentFoundUp(false), currentFoundSide(false);
 				BoardState currentPosition;
@@ -109,7 +115,7 @@ bool Board::CheckForWinner(int checkAmount)
 
 		if (CurrentTurns == MAXTURNS)
 		{
-			NoWinner = true;
+			NotOver = true;
 		}
 	}
 	return false;

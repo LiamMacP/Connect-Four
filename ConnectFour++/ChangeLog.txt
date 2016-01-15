@@ -1,20 +1,14 @@
 Updated:
-	- Board Sprite and Mask: Bigger so scales better. Plus more detail! Everyone loves detail.
-	- Counter Sprite: Bigger so scales better. Plus more detail! The bigger the better they say.
+	- Board to now properly handle if the game gets to the max number of turns. 42 is the magic number!
 
 Changed: 
-	- Size of counter made smaller so doesn't look silly.
-	- X Position for in board. New counter showed bad offsetting.
-	- Get rid of messageboxes altogether. They're not user friendly, who says I don't think about you!
+	- Division by 2. Now uses bitshift. Feel the speed.
+	- No more warnings! I know you'll miss them.
 
 Added: 
-	- Added constants header file. Refactoring code for readability. Not that you want to read it. [Nothing in it yet. Its the thought that counts]
-	- Added prototypes header file. Bored of seeing them all.
-	- Added Main Menu for user to be able to choose whether not they want to play AI or user.
-	- New game button to the game so you can restart if you feel your losing. 
+	- The player can now use the numerical input for the counter. Even their numerical keypad. Awesome.
 
 TODO: 
 	- Add hover effects to the buttons.
 	- Save all of the settings to a document and allow for the user to change it. 
 	- After a move is made, check where the mouse currently is.
-	- Fix the nice 21 Warnings. 
