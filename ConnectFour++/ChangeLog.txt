@@ -1,14 +1,20 @@
 Updated:
-	- Board to now properly handle if the game gets to the max number of turns. 42 is the magic number!
-
+	- Cleared up memory leaks. I love creating 'new' things.
+	- Refactored some code. Fixed my silly mistakes!  
+	
 Changed: 
-	- Division by 2. Now uses bitshift. Feel the speed.
-	- No more warnings! I know you'll miss them.
+	- Got rid of massive menus in aid of smaller more user friendly menu. [Room for Improvement]
+	- Got rid of unnescessary bitmaps. SPACE!
+	- Got rid of more warnings that were thrown after ridding of the memory leaks. Every problem causes 99 more.
 
 Added: 
-	- The player can now use the numerical input for the counter. Even their numerical keypad. Awesome.
+	- Resorted to Applying MinMax to window size to stop user abusing.
+		+ Buttons no longer overlap board.
+		+ Text no longer go's outside boundary of button.
+		+ Multiline winner text.
+	- New winner reveal, grey counter bitmap shows the winning move.
 
 TODO: 
 	- Add hover effects to the buttons.
 	- Save all of the settings to a document and allow for the user to change it. 
-	- After a move is made, check where the mouse currently is.
+	- Refactor code for Board Array to a typedef inplementation. [typedef BoardState BoardArray[6][7]]

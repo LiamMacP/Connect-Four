@@ -5,6 +5,12 @@
 
 #define MAXTURNS 42
 
+struct WinningMove
+{
+	WinCondition condition;
+	int x, y;
+};
+
 class Board
 {
 	bool GameFinished;
@@ -13,6 +19,7 @@ class Board
 	int CurrentTurns;
 	Colours PlayerCurrently;
 	Colours WinningPlayer; 
+	WinningMove winCoords;
 
 public:
 	BoardState CurrentBoard[6][7];
@@ -34,6 +41,7 @@ public:
 	int ReturnNextFree(const int index) { return NextFree[index]; }
 	Colours ReturnWinningPlayer() { return WinningPlayer; }
 	FinishedGame ReturnWonOrNot() { return WinnerOrNot; }
+	WinningMove ReturnWinningMove() { return winCoords; }
 	Board();
 private:
 	bool CheckForDiagonal(const BoardState CurrentPosition, const int i, const  int j,const  int checkAmount);

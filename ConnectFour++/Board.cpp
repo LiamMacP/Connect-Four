@@ -132,17 +132,20 @@ bool Board::CheckForDiagonal(const BoardState CurrentPosition, const int i,const
 		{
 			currentFoundDiagonal++;
 			diagY--;
+			if (currentFoundDiagonal == 4)
+			{
+				winCoords.condition = LeftDiagonal;
+				winCoords.x = diagX;
+				winCoords.y = diagY +1;
+				return true;
+			}
 		}
 		else
 		{
 			diagX = 0;
 		}
 	}
-	if (currentFoundDiagonal == 4)
-	{
-		return true;
-	}
-
+	
 	currentFoundDiagonal = 1;
 	diagY = i + 1;
 	for (int diagX = j - 1; diagX >= 0; diagX--)
@@ -152,16 +155,18 @@ bool Board::CheckForDiagonal(const BoardState CurrentPosition, const int i,const
 		{
 			currentFoundDiagonal++;
 			diagY++;
-		
+			if (currentFoundDiagonal == 4)
+			{
+				winCoords.condition = RightDiagonal;
+				winCoords.x = diagX + 3;
+				winCoords.y = diagY - 4;
+				return true;
+			}
 		}
 		else
 		{
 			diagX = 0;
 		}
-	}
-	if (currentFoundDiagonal == 4)
-	{
-		return true;
 	}
 	return false;
 }
@@ -174,18 +179,19 @@ bool Board::CheckUpDown(const BoardState CurrentPosition, const int i, const  in
 		if (CurrentPosition == CurrentBoard[yAxis][j])
 		{
 				currentFoundUp++;
-			/*	if (currentFoundUp == 3 && CurrentBoard[yAxis-1][j] != CurrentPosition)
-				yAxis = 0;*/
+				if (currentFoundUp == 4)
+				{
+					winCoords.condition = UpDown;
+					winCoords.x = j;
+					winCoords.y = yAxis;
+					return true;
+				}
 		
 		}
 		else
 		{
 			yAxis = 0;
 		}
-	}
-	if (currentFoundUp == 4)
-	{
-		return true;
 	}
 	return false;
 }
@@ -199,17 +205,18 @@ bool Board::CheckSide(const BoardState CurrentPosition, const int i, const  int 
 		if (CurrentPosition == CurrentBoard[i][xAxis])
 		{ 
 			currentFoundSide++;
-			if (currentFoundSide == 3 && CurrentBoard[i][xAxis - 1] != CurrentPosition)
-				xAxis = 0;
+			if (currentFoundSide == 4)
+			{
+				winCoords.condition = LeftRight;
+				winCoords.x = xAxis;
+				winCoords.y = i;
+				return true;
+			}
 		}
 		else
 		{
 			xAxis = 0;
 		}
-	}
-	if (currentFoundSide == 4)
-	{
-		return true;
 	}
 	return false;
 }

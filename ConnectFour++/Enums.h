@@ -30,3 +30,10 @@ enum GameState {
 	NewGameQuery, 
 	GameOver
 };
+
+enum WinCondition {
+	LeftRight,
+	UpDown,
+	RightDiagonal,
+	LeftDiagonal
+};
