@@ -18,3 +18,5 @@ TODO:
 	- Add hover effects to the buttons.
 	- Save all of the settings to a document and allow for the user to change it. 
 	- Refactor code for Board Array to a typedef inplementation. [typedef BoardState BoardArray[6][7]]
+	- Add seperate function for adding winning move and direction - Board, CheckDown and other Checks
+	- Constant for the size of the board, apply to CheckWinner function

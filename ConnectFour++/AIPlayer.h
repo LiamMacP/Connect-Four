@@ -11,17 +11,16 @@ class AIPlayer : public Player
 	int nextColumnToPlay;
 
 public:
-	int PlayAI(BoardState MainBoard[6][7], int nextCopy[7], int numberOfTurns);
-	void ChangeDifficulty(AIDifficulty NewDifficulty) { Difficulty = NewDifficulty; }
-
+	int PlayAI(const BoardState MainBoard[6][7], const int nextCopy[7], const int& numberOfTurns);
+	void ChangeDifficulty(const AIDifficulty& NewDifficulty) { Difficulty = NewDifficulty; }
 	AIPlayer();
-	~AIPlayer();
+
 private:
-	int RandomiseMove(BoardState MainBoard[6][7], int nextCopy[7], int numberOfTurns);
-	int CanBlock(BoardState MainBoard[6][7], int nextCopy[7], int numberOfTurns);
-	int CanWin(BoardState MainBoard[6][7], int nextCopy[7], int numberOfTurns);
-	int MakeThree(BoardState MainBoard[6][7], int nextCopy[7], int numberOfTurns);
-	int Win2Moves(BoardState MainBoard[6][7], int nextCopy[7], int numberOfTurns);
-	int Block2Moves(BoardState MainBoard[6][7], int nextCopy[7], int numberOfTurns);
+	int RandomiseMove(const int nextCopy[7]);
+	int CanBlock(const BoardState MainBoard[6][7], const int nextCopy[7], const int& numberOfTurns);
+	int CanWin(const BoardState MainBoard[6][7], const int nextCopy[7], const int& numberOfTurns);
+	int MakeThree(const BoardState MainBoard[6][7], const int nextCopy[7], const int& numberOfTurns);
+	int Win2Moves(const BoardState MainBoard[6][7], const int nextCopy[7], const int& numberOfTurns);
+	int Block2Moves(const BoardState MainBoard[6][7],const int nextCopy[7],const int& numberOfTurns);
 };
 

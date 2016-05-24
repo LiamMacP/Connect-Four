@@ -1,18 +1,17 @@
-#include <stdlib.h>
-#include <ctime>
 #include "Board.h"
 
 Board::Board()
 {
 	Board::RefreshBoard();
+	srand(static_cast<unsigned int>(time(NULL)));
 }
 
-bool Board::PlayTurn(const int index)
+bool Board::PlayTurn(const int& index)
 {
 	if (CheckInputValidity(index))
 	{
 		AddToColumn(index);
-		if (CheckForWinner())
+		if (CheckForWinner(index, NextFree[index] - 1))
 		{
 			WinningPlayer = PlayerCurrently;
 			WinnerOrNot = Winner;
@@ -31,37 +30,34 @@ bool Board::PlayTurn(const int index)
 	return false;
 }
 
-void Board::AddToColumn(const int ColumnID)
+void Board::AddToColumn(const int& ColumnID)
 {
 		if (PlayerCurrently == REDColour)
 			CurrentBoard[5 - NextFree[ColumnID]][ColumnID] = RED;
 		else
 			CurrentBoard[5 - NextFree[ColumnID]][ColumnID] = YELLOW;
-		NextFree[ColumnID]++;
+		++NextFree[ColumnID];
 }
 
-void Board::AddToColumn(const int ColumnID, Colours PlayerToAdd)
+void Board::AddToColumn(const int& ColumnID, const Colours& PlayerToAdd)
 {
 	if (PlayerToAdd == REDColour)
 		CurrentBoard[5 - NextFree[ColumnID]][ColumnID] = RED;
 	else
 		CurrentBoard[5 - NextFree[ColumnID]][ColumnID] = YELLOW;
-	NextFree[ColumnID]++;
+	++NextFree[ColumnID];
 }
 
-bool Board::CheckInputValidity(const int ColumnID)
+bool Board::CheckInputValidity(const int& ColumnID)
 {
-	if (ColumnID >= 0 && ColumnID < 7 && NextFree[ColumnID] < 6)
-		return true;
-	else
-		return false;
+	return (ColumnID >= 0 && ColumnID < 7 && NextFree[ColumnID] < MAXBOARDHEIGHT);
 }
 
-void Board::CopyBoard(BoardState copyToBoard[6][7], int nextCopy[7], int numberOfTurns)
+void Board::CopyBoard(const BoardState copyToBoard[6][7],const int nextCopy[7], const int& numberOfTurns)
 {
-	for (int i = 0; i < 7; i++)
+	for (int i = 0; i < MAXBOARDWIDTH; ++i)
 	{
-		for (int j = 0; j < 6; j++)
+		for (int j = 0; j < MAXBOARDHEIGHT; ++j)
 			CurrentBoard[j][i] = copyToBoard[j][i];
 		NextFree[i] = nextCopy[i];
 	}
@@ -70,9 +66,9 @@ void Board::CopyBoard(BoardState copyToBoard[6][7], int nextCopy[7], int numberO
 
 void Board::RefreshBoard()
 {
-	for (int i = 0; i < 7; i++)
+	for (int i = 0; i < MAXBOARDWIDTH; ++i)
 	{
-		for (int j = 0; j < 6; j++)
+		for (int j = 0; j < MAXBOARDHEIGHT; ++j)
 			CurrentBoard[j][i] = BLANKSPACE;
 		NextFree[i] = 0;
 	}
@@ -82,148 +78,141 @@ void Board::RefreshBoard()
 	RandomiseStartingPlayer();
 }
 
-bool Board::CheckForWinner(int checkAmount)
+bool Board::CheckForWinner(const int& xCoord, const int& yCoord, const int& checkAmount)
 {
-	CurrentTurns++;
-	for (int i = 5; i >= 0; i--)
+	++CurrentTurns;
+	if (!(GameFinished || NotOver))
 	{
-		for (int j = 6; j >= 0; j--)
-		{
-			if (!(GameFinished) && !(NotOver))
-			{
-				bool currentFoundDiag(false), currentFoundUp(false), currentFoundSide(false);
-				BoardState currentPosition;
-
-				if (!(CurrentBoard[i][j] == BLANKSPACE))
-				{
-					currentPosition = CurrentBoard[i][j];
-
-					currentFoundDiag = CheckForDiagonal(currentPosition, i, j, checkAmount);
-
-					currentFoundSide = CheckSide(currentPosition, i, j, checkAmount);
-
-					currentFoundUp = CheckUpDown(currentPosition, i, j, checkAmount);
-
-					if (currentFoundDiag || currentFoundUp || currentFoundSide)
-					{
-						return true;
-					}
-				}
-			}
-
-		}
-
+		bool currentFoundDiag(false), currentFoundUp(false), currentFoundSide(false);
+		BoardState currentPosition;
+		currentPosition = CurrentBoard[5-yCoord][xCoord];
+		currentFoundDiag = CheckForDiagonal(currentPosition, 5 - yCoord, xCoord, checkAmount);
+		currentFoundSide = CheckSide(currentPosition, 5 - yCoord, xCoord, checkAmount);
+		currentFoundUp = CheckDown(currentPosition, 5 - yCoord, xCoord, checkAmount);
+		if (currentFoundDiag || currentFoundUp || currentFoundSide)
+			return true;		
 		if (CurrentTurns == MAXTURNS)
-		{
 			NotOver = true;
-		}
 	}
 	return false;
 }
 
-bool Board::CheckForDiagonal(const BoardState CurrentPosition, const int i,const  int j, const int checkAmount)
+bool Board::CheckForDiagonal(const BoardState& CurrentPosition, const int& i, const int& j, const int& checkAmount)
 {
-	int currentFoundDiagonal(1);
-	int diagY = i - 1;
-	for (int diagX = j - 1; diagX >= 0; diagX--)
+	int currentFoundDiagonal(1), diagY = i + 1, diagX = j + 1;
+	while (diagX <= 6 && diagY <= 5 && CurrentPosition == CurrentBoard[diagY][diagX])
 	{
-
-		if (CurrentPosition == CurrentBoard[diagY][diagX])
+		++currentFoundDiagonal;
+		++diagY;
+		if (currentFoundDiagonal == checkAmount)
 		{
-			currentFoundDiagonal++;
-			diagY--;
-			if (currentFoundDiagonal == 4)
-			{
-				winCoords.condition = LeftDiagonal;
-				winCoords.x = diagX;
-				winCoords.y = diagY +1;
-				return true;
-			}
+			winCoords.condition = LeftDiagonal;
+			winCoords.x = j;
+			winCoords.y = i;
+			return true;
 		}
-		else
-		{
-			diagX = 0;
-		}
+		++diagX;
 	}
+	diagY = i - 1; diagX = j - 1;
+	while (diagX >= 0 && diagY >= 0 && CurrentPosition == CurrentBoard[diagY][diagX])
+	{
+		++currentFoundDiagonal;
+		--diagY;
+		if (currentFoundDiagonal == checkAmount)
+		{
+			winCoords.condition = LeftDiagonal;
+			winCoords.x = diagX;
+			winCoords.y = diagY + 1;
+			return true;
+		}
+		--diagX;
+	}	
 	
 	currentFoundDiagonal = 1;
 	diagY = i + 1;
-	for (int diagX = j - 1; diagX >= 0; diagX--)
+	diagX = j - 1;
+	while (diagX >= 0 && diagY <= 5 && CurrentPosition == CurrentBoard[diagY][diagX])
 	{
-
-		if (CurrentPosition == CurrentBoard[diagY][diagX])
+		++currentFoundDiagonal;
+		++diagY;
+		if (currentFoundDiagonal == checkAmount)
 		{
-			currentFoundDiagonal++;
-			diagY++;
-			if (currentFoundDiagonal == 4)
-			{
-				winCoords.condition = RightDiagonal;
-				winCoords.x = diagX + 3;
-				winCoords.y = diagY - 4;
-				return true;
-			}
+			winCoords.condition = RightDiagonal;
+			winCoords.x = diagX + 3;
+			winCoords.y = diagY - 4;
+			return true;
 		}
-		else
+		--diagX;
+	}
+	diagX = j + 1;
+	diagY = i - 1;
+	while (diagX <= 6 && diagY >= 0 && CurrentPosition == CurrentBoard[diagY][diagX])
+	{
+		++currentFoundDiagonal;
+		--diagY;
+		if (currentFoundDiagonal == checkAmount)
 		{
-			diagX = 0;
+			winCoords.condition = RightDiagonal;
+			winCoords.x = diagX;
+			winCoords.y = diagY + 1;
+			return true;
 		}
+		++diagX;
 	}
 	return false;
 }
 
-bool Board::CheckUpDown(const BoardState CurrentPosition, const int i, const  int j, const int checkAmount)
+bool Board::CheckDown(const BoardState& CurrentPosition, const int& i, const int& j, const int& checkAmount)
 {
-	int currentFoundUp(1);
-	for (int yAxis = i - 1; yAxis >= 0; yAxis--)
+	int currentFoundUp(1), yAxis(i + 1);
+	while (yAxis <= 5 && CurrentPosition == CurrentBoard[yAxis][j])
 	{
-		if (CurrentPosition == CurrentBoard[yAxis][j])
+		++currentFoundUp;
+		if (currentFoundUp == checkAmount)
 		{
-				currentFoundUp++;
-				if (currentFoundUp == 4)
-				{
-					winCoords.condition = UpDown;
-					winCoords.x = j;
-					winCoords.y = yAxis;
-					return true;
-				}
-		
+			winCoords.condition = UpDown;
+			winCoords.x = j;
+			winCoords.y = i;
+			return true;
 		}
-		else
-		{
-			yAxis = 0;
-		}
+		++yAxis;
 	}
 	return false;
 }
 
-bool Board::CheckSide(const BoardState CurrentPosition, const int i, const  int j, const int checkAmount)
+bool Board::CheckSide(const BoardState& CurrentPosition, const int& i, const int& j, const int& checkAmount)
 {
-	int currentFoundSide(1);
-	for (int xAxis = j - 1; xAxis >= 0; xAxis--)
+	int currentFoundSide(1), xAxis(j + 1);
+	while (xAxis <= 6 && CurrentPosition == CurrentBoard[i][xAxis])
 	{
-
-		if (CurrentPosition == CurrentBoard[i][xAxis])
-		{ 
-			currentFoundSide++;
-			if (currentFoundSide == 4)
-			{
-				winCoords.condition = LeftRight;
-				winCoords.x = xAxis;
-				winCoords.y = i;
-				return true;
-			}
-		}
-		else
+		++currentFoundSide;
+		if (currentFoundSide == checkAmount)
 		{
-			xAxis = 0;
+			winCoords.condition = LeftRight;
+			winCoords.x = j;
+			winCoords.y = i;
+			return true;
 		}
+		++xAxis;
+	}
+	xAxis = j - 1;
+	while (xAxis >= 0 && CurrentPosition == CurrentBoard[i][xAxis])
+	{
+		++currentFoundSide;
+		if (currentFoundSide == checkAmount)
+		{
+			winCoords.condition = LeftRight;
+			winCoords.x = xAxis;
+			winCoords.y = i;
+			return true;
+		}
+		--xAxis;
 	}
 	return false;
 }
 
 void Board::RandomiseStartingPlayer()
 {
-	srand(static_cast<unsigned int>(time(NULL)));
 	if (rand() % 2)
 		PlayerCurrently = REDColour;
 	else

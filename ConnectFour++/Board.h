@@ -2,8 +2,9 @@
 #include <Windows.h>
 #include "Player.h"
 #include "Enums.h"
-
-#define MAXTURNS 42
+#include "Constants.h"
+#include <stdlib.h>
+#include <ctime>
 
 struct WinningMove
 {
@@ -24,28 +25,29 @@ class Board
 public:
 	BoardState CurrentBoard[6][7];
 	int NextFree[7];
-	bool PlayTurn(const int index);
+	Board();
+	bool PlayTurn(const int& index);
+	void AddToColumn(const int& ColumnID);
+	void AddToColumn(const int& ColumnID, const Colours& PlayerToAdd);
+	bool CheckInputValidity(const int& ColumnID);
+	void CopyBoard(const BoardState copyToBoard[6][7], const int nextCopy[7], const int& numberOfTurns);
+	void RefreshBoard();
+	bool CheckForWinner(const int& xCoord, const int& yCoord, const int& checkAmount = 4);
 	void RandomiseStartingPlayer();
 	void ChangePlayer();
-	void ChangeToPlayer(Colours PlayerToAdd) {PlayerCurrently = PlayerToAdd; }
-	bool CheckForWinner(int checkAmount = 4);
-	bool CheckInputValidity(const int ColumnID);
-	void AddToColumn(const int ColumnID);
-	void AddToColumn(const int ColumnID, Colours PlayerToAdd);
-	void CopyBoard(BoardState copy[6][7], int nextCopy[7], int numberOfTurns);
-	void RefreshBoard();
-	int GetNextFreeNumber(const int ColumnID) { return NextFree[ColumnID]; }
-	BoardState ReturnSelectedValue(const int i, const int j) { return CurrentBoard[i][j]; }
-	Colours ReturnCurrentPlayer() { return PlayerCurrently; }
-	int ReturnNumberOfTurns() { return CurrentTurns; }
-	int ReturnNextFree(const int index) { return NextFree[index]; }
-	Colours ReturnWinningPlayer() { return WinningPlayer; }
-	FinishedGame ReturnWonOrNot() { return WinnerOrNot; }
-	WinningMove ReturnWinningMove() { return winCoords; }
-	Board();
+	Colours ReturnWinningPlayer() const { return WinningPlayer; }
+	FinishedGame ReturnWonOrNot() const { return WinnerOrNot; }
+	WinningMove ReturnWinningMove() const { return winCoords; }
+	int ReturnNumberOfTurns() const { return CurrentTurns; }
+	int ReturnNextFree(const int& index) const { return NextFree[index]; }
+	BoardState ReturnSelectedValue(const int& i, const int& j) const { return CurrentBoard[i][j]; }
+	Colours ReturnCurrentPlayer() const { return PlayerCurrently; }
+	void ChangeToPlayer(const Colours& PlayerToAdd) { PlayerCurrently = PlayerToAdd; }
+	int GetNextFreeNumber(const int& ColumnID) const { return NextFree[ColumnID]; }
+	
 private:
-	bool CheckForDiagonal(const BoardState CurrentPosition, const int i, const  int j,const  int checkAmount);
-	bool CheckUpDown(const BoardState CurrentPosition, const int i, const  int j, const int checkAmount);
-	bool CheckSide(const BoardState CurrentPosition, const int i, const  int j,const  int checkAmount);
+	bool CheckForDiagonal(const BoardState& CurrentPosition, const int& i, const int& j, const int& checkAmount);
+	bool CheckDown(const BoardState& CurrentPosition, const int& i, const int& j, const int& checkAmount);
+	bool CheckSide(const BoardState& CurrentPosition, const int& i, const int& j, const int& checkAmount);
 };
 

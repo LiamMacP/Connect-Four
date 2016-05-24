@@ -332,19 +332,19 @@ void DrawCurrentPoints(HDC hdc, RECT rect)
 				::StretchBlt(hdc, xStart, leftLocation, counterSizeOffset, counterSizeOffset, hdctmp, 0, 0, 150, 150, SRCINVERT);
 				if (board.ReturnWinningMove().condition == RightDiagonal)
 				{
-					xCoords--; yCoords++; count++;
+					--xCoords; ++yCoords; ++count;
 				}
 				else if (board.ReturnWinningMove().condition == LeftDiagonal)
 				{
-					xCoords++; yCoords++; count++;
+					++xCoords; ++yCoords; ++count;
 				}
 				else if (board.ReturnWinningMove().condition == LeftRight)
 				{
-					xCoords++; count++;
+					++xCoords; ++count;
 				}
 				else
 				{
-					yCoords++; count++;
+					++yCoords; ++count;
 				}
 			}
 			else
